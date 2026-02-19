@@ -3,6 +3,10 @@ require("dotenv").config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x" + "0".repeat(64);
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
+const BSC_RPC_URL = process.env.BSC_RPC_URL || "https://bsc-dataseed.binance.org/";
+const BSC_TESTNET_RPC_URL = process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545/";
+
+const accounts = PRIVATE_KEY !== "0x" + "0".repeat(64) ? [PRIVATE_KEY] : [];
 
 module.exports = {
   solidity: {
@@ -23,7 +27,17 @@ module.exports = {
     },
     sepolia: {
       url: SEPOLIA_RPC_URL,
-      accounts: PRIVATE_KEY !== "0x" + "0".repeat(64) ? [PRIVATE_KEY] : [],
+      accounts,
+    },
+    bsc: {
+      url: BSC_RPC_URL,
+      chainId: 56,
+      accounts,
+    },
+    bscTestnet: {
+      url: BSC_TESTNET_RPC_URL,
+      chainId: 97,
+      accounts,
     },
   },
 };

@@ -7,8 +7,11 @@
     "test": "hardhat test",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:bsc": "hardhat run scripts/deploy.js --network bsc",
+    "deploy:bsc-testnet": "hardhat run scripts/deploy.js --network bscTestnet",
     "node": "hardhat node",
-    "client": "node client/index.js"
+    "client": "node client/index.js",
+    "test:local": "hardhat run scripts/test-local.js --network localhost"
   },
   "devDependencies": {
     "hardhat": "^2.22.0",

@@ -62,7 +62,7 @@ async function main() {
   const provider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
   const wallet = new ethers.Wallet(CONFIG.privateKey, provider);
   const contract = new ethers.Contract(CONFIG.contractAddress, ABI, wallet);
-  const localMAC = getLocalMAC();
+  const localMAC = process.env.NODE_MAC || getLocalMAC();
 
   log("INFO", `Node started  | MAC: ${localMAC}`);
   log("INFO", `RPC: ${CONFIG.rpcUrl}`);
