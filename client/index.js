@@ -93,9 +93,10 @@ async function main() {
       const [masterMAC, lastHB, alive] = await contract.getCurrentMaster();
       const state = await contract.getState();
 
-      log("INFO", `State: ${STATE_NAMES[state]} | Master: ${masterMAC || "(none)"} | alive: ${alive} | lastHB: ${lastHB}`);
+      const stateNum = Number(state);
+      log("INFO", `State: ${STATE_NAMES[stateNum]} | Master: ${masterMAC || "(none)"} | alive: ${alive} | lastHB: ${lastHB}`);
 
-      if (state === 0) {
+      if (stateNum === 0) {
         log("INFO", "Idle state. Electing self...");
         const tx = await contract.electMaster(localMAC);
         await tx.wait();
@@ -111,7 +112,7 @@ async function main() {
         const tx = await contract.sendHeartbeat(localMAC);
         await tx.wait();
         log("INFO", "Heartbeat sent.");
-      } else if (state === 2) {
+      } else if (stateNum === 2) {
         log("WARN", "Election state. Attempting to claim master...");
         try {
           const tx = await contract.electMaster(localMAC);
