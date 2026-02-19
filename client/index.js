@@ -26,7 +26,7 @@ const STATE_NAMES = ["Idle", "Running", "Election"];
 // Config
 // ---------------------------------------------------------------------------
 const CONFIG = {
-  rpcUrl: process.env.RPC_URL || process.env.SEPOLIA_RPC_URL || "http://127.0.0.1:8545",
+  rpcUrl: process.env.RPC_URL || process.env.BSC_RPC_URL || process.env.BSC_TESTNET_RPC_URL || process.env.SEPOLIA_RPC_URL || "http://127.0.0.1:8545",
   contractAddress: process.env.CONTRACT_ADDRESS,
   privateKey: process.env.PRIVATE_KEY,
   checkInterval: parseInt(process.env.CHECK_INTERVAL || "30", 10) * 1000,
