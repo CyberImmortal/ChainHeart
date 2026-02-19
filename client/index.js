@@ -53,6 +53,22 @@ function log(level, msg) {
 }
 
 // ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
+
+/**
+ * Called when this node successfully becomes master.
+ * Replace the placeholder log with actual business logic
+ * (e.g. purchase server, start services, notify cluster).
+ */
+async function onElectedMaster(mac) {
+  log("HOOK", `>>> onElectedMaster triggered | MAC: ${mac}`);
+  log("HOOK", ">>> TODO: purchase server / start services");
+  // await purchaseServer();
+  // await startServices();
+}
+
+// ---------------------------------------------------------------------------
 // Main loop
 // ---------------------------------------------------------------------------
 async function main() {
@@ -84,6 +100,7 @@ async function main() {
         const tx = await contract.electMaster(localMAC);
         await tx.wait();
         log("INFO", "Election tx confirmed. I am now master.");
+        await onElectedMaster(localMAC);
         return;
       }
 
@@ -100,6 +117,7 @@ async function main() {
           const tx = await contract.electMaster(localMAC);
           await tx.wait();
           log("INFO", "Election tx confirmed. I am now master.");
+          await onElectedMaster(localMAC);
         } catch (err) {
           log("WARN", `Election failed (another node may have won): ${err.message}`);
         }

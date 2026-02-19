@@ -17,9 +17,22 @@ async function main() {
     deployer.address,
     initialMasterMAC
   );
-  await heart.waitForDeployment();
 
-  const address = await heart.getAddress();
+  // Some RPC providers (e.g. BSC) return "" instead of null for the `to`
+  // field on contract creation txs, which breaks ethers v6 parsing.
+  // Fall back to waiting for the receipt via the provider directly.
+  let address;
+  try {
+    await heart.waitForDeployment();
+    address = await heart.getAddress();
+  } catch {
+    const tx = heart.deploymentTransaction();
+    if (!tx || !tx.hash) throw new Error("Deployment transaction not found");
+    console.log(`  Tx hash: ${tx.hash}`);
+    console.log("  Waiting for confirmation...");
+    const receipt = await hre.ethers.provider.waitForTransaction(tx.hash);
+    address = receipt.contractAddress;
+  }
 
   console.log(`  Contract deployed to: ${address}`);
   console.log("\nDone. Set CONTRACT_ADDRESS in .env to:", address);
