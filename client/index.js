@@ -1,6 +1,7 @@
 const { ethers } = require("ethers");
 const { networkInterfaces } = require("os");
 const path = require("path");
+const { createProvider } = require("./providers");
 
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
@@ -58,14 +59,23 @@ function log(level, msg) {
 
 /**
  * Called when this node successfully becomes master.
- * Replace the placeholder log with actual business logic
- * (e.g. purchase server, start services, notify cluster).
+ * If a cloud provider is configured, provisions a new server instance.
  */
-async function onElectedMaster(mac) {
+async function onElectedMaster(mac, cloudProvider) {
   log("HOOK", `>>> onElectedMaster triggered | MAC: ${mac}`);
-  log("HOOK", ">>> TODO: purchase server / start services");
-  // await purchaseServer();
-  // await startServices();
+
+  if (!cloudProvider) {
+    log("HOOK", ">>> No cloud provider configured, skipping server provisioning");
+    return;
+  }
+
+  try {
+    log("HOOK", `>>> Provisioning server via ${cloudProvider.name}...`);
+    const result = await cloudProvider.createServer();
+    log("HOOK", `>>> Server created: ${JSON.stringify(result)}`);
+  } catch (err) {
+    log("ERROR", `>>> Failed to provision server: ${err.message}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -75,14 +85,17 @@ async function main() {
   if (!CONFIG.contractAddress) throw new Error("CONTRACT_ADDRESS is required");
   if (!CONFIG.privateKey) throw new Error("PRIVATE_KEY is required");
 
-  const provider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
-  const wallet = new ethers.Wallet(CONFIG.privateKey, provider);
+  const rpcProvider = new ethers.JsonRpcProvider(CONFIG.rpcUrl);
+  const wallet = new ethers.Wallet(CONFIG.privateKey, rpcProvider);
   const contract = new ethers.Contract(CONFIG.contractAddress, ABI, wallet);
   const localMAC = process.env.NODE_MAC || getLocalMAC();
+
+  const cloudProvider = createProvider();
 
   log("INFO", `Node started  | MAC: ${localMAC}`);
   log("INFO", `RPC: ${CONFIG.rpcUrl}`);
   log("INFO", `Contract: ${CONFIG.contractAddress}`);
+  log("INFO", `Cloud provider: ${cloudProvider ? cloudProvider.name : "(none)"}`);
 
   contract.on("MasterElected", (mac, ts) => {
     log("EVENT", `MasterElected => ${mac} at ${ts}`);
@@ -101,7 +114,7 @@ async function main() {
         const tx = await contract.electMaster(localMAC);
         await tx.wait();
         log("INFO", "Election tx confirmed. I am now master.");
-        await onElectedMaster(localMAC);
+        await onElectedMaster(localMAC, cloudProvider);
         return;
       }
 
@@ -118,7 +131,7 @@ async function main() {
           const tx = await contract.electMaster(localMAC);
           await tx.wait();
           log("INFO", "Election tx confirmed. I am now master.");
-          await onElectedMaster(localMAC);
+          await onElectedMaster(localMAC, cloudProvider);
         } catch (err) {
           log("WARN", `Election failed (another node may have won): ${err.message}`);
         }
@@ -133,6 +146,8 @@ async function main() {
   await tick();
   setInterval(tick, CONFIG.checkInterval);
 }
+
+module.exports = { onElectedMaster };
 
 main().catch((err) => {
   console.error("Fatal:", err);
